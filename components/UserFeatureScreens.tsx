@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MapPin, Search, Star, Clock, ShoppingBag, Leaf, DollarSign, Award, Share2, Heart, Filter, CheckCircle, User as UserIcon, Phone, FileText, Send, X, Home, Info, ChevronRight, Store, Wallet, CreditCard, Banknote, ChevronDown, ChevronLeft, Building2, MessageCircle, Calendar } from 'lucide-react';
 import { ScreenName } from '../types';
 import { Button, Input, ScreenLayout, Header, ScrollableContent, Section, Card, Badge, ListItem } from './ui';
+import { analyzeImpact } from '../services/geminiService';
 
 interface FeatureProps {
   navigate: (screen: ScreenName) => void;
@@ -664,19 +665,76 @@ export const ReservationSuccessScreen: React.FC<FeatureProps> = ({ navigate }) =
   );
 };
 
-export const ImpactReportScreen: React.FC<FeatureProps> = ({ navigate, goBack }) => {
+export const ImpactReportScreen: React.FC<FeatureProps> = ({ navigate, goBack, globalState }) => {
+   // Ambil riwayat user dari Global State
+   const history = globalState.historyItems || [];
+   
+   // State untuk data dampak
+   const [impactData, setImpactData] = useState({
+      co2: "Menghitung...",
+      money: "Menghitung...",
+      desc: "Sedang menganalisis dampak lingkungan Anda..."
+   });
+
+   useEffect(() => {
+      const calculateImpact = async () => {
+         // Jika tidak ada history, set default
+         if (history.length === 0) {
+            setImpactData({ co2: "0 kg", money: "Rp 0", desc: "Belum ada makanan yang diselamatkan." });
+            return;
+         }
+
+         // 1. Hitung total uang secara manual (lebih akurat)
+         let totalMoney = 0;
+         const foodItems: string[] = [];
+         
+         history.forEach((h: any) => {
+            if (h.status === 'Selesai') {
+               // Bersihkan string harga "Rp 25.000" -> 25000
+               const price = parseInt(h.price.replace(/[^0-9]/g, '')) || 0;
+               totalMoney += price;
+               foodItems.push(h.item); // Kumpulkan nama makanan
+            }
+         });
+
+         // 2. Minta AI menghitung dampak lingkungan (CO2) berdasarkan daftar makanan
+         try {
+            // Kita kirim ringkasan makanan ke AI
+            const summaryText = foodItems.join(", ");
+            // Only call AI if there are items
+            if (foodItems.length > 0) {
+              const aiResult = await analyzeImpact(summaryText, `${foodItems.length} porsi`);
+              
+              setImpactData({
+                co2: aiResult.co2Saved,
+                money: `Rp ${totalMoney.toLocaleString('id-ID')}`, // Gunakan hitungan real uang kita
+                desc: aiResult.nutritionSummary || "Anda telah berkontribusi besar mengurangi limbah pangan!"
+              });
+            } else {
+               setImpactData({ co2: "0 kg", money: "Rp 0", desc: "Belum ada makanan yang diselamatkan." });
+            }
+         } catch (e) {
+            console.error("Gagal hitung dampak", e);
+            setImpactData({ co2: "Calculating...", money: `Rp ${totalMoney.toLocaleString('id-ID')}`, desc: "Data dampak belum tersedia." });
+         }
+      };
+
+      calculateImpact();
+   }, [history]);
+
    return (
       <ScreenLayout bgClass="bg-white dark:bg-gray-900 transition-colors duration-300">
          <Header title="Laporan Dampak" onBack={goBack} className="dark:bg-gray-900 dark:border-gray-800 dark:text-white" />
          <ScrollableContent>
-            {/* Hero Card */}
-            <div className="bg-gradient-to-br from-green-500 to-emerald-700 rounded-3xl p-6 text-white relative overflow-hidden mb-6 shadow-lg shadow-green-200 dark:shadow-none">
+            {/* Hero Card dengan Data Dinamis */}
+            <div className="bg-gradient-to-br from-green-500 to-emerald-700 rounded-3xl p-6 text-white relative overflow-hidden mb-6 shadow-lg shadow-green-200 dark:shadow-none animate-in slide-in-from-bottom">
                <div className="relative z-10">
                   <p className="text-green-100 text-sm font-medium mb-1">Total Penyelamatan Makanan</p>
-                  <h2 className="text-4xl font-bold mb-4">12.5 kg</h2>
+                  {/* Tampilkan CO2 dari AI */}
+                  <h2 className="text-4xl font-bold mb-4">{impactData.co2}</h2>
                   <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur rounded-full px-3 py-1 text-xs">
                      <Leaf size={14} />
-                     <span>Setara 25 porsi makan</span>
+                     <span>Setara mencegah emisi gas metana</span>
                   </div>
                </div>
                <Leaf className="absolute -bottom-10 -right-10 text-white opacity-10 rotate-12" size={200} />
@@ -689,14 +747,16 @@ export const ImpactReportScreen: React.FC<FeatureProps> = ({ navigate, goBack })
                      <DollarSign size={20} />
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Uang Dihemat</p>
-                  <h4 className="font-bold text-lg text-gray-900 dark:text-white">Rp 450rb</h4>
+                  {/* Tampilkan Uang Real */}
+                  <h4 className="font-bold text-lg text-gray-900 dark:text-white">{impactData.money}</h4>
                </Card>
                <Card className="bg-blue-50 border-blue-100 dark:bg-blue-900/10 dark:border-blue-800">
                   <div className="w-10 h-10 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-200 mb-3">
                      <Leaf size={20} />
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">CO2 Dicegah</p>
-                  <h4 className="font-bold text-lg text-gray-900 dark:text-white">32 kg</h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Analisis Gizi</p>
+                   {/* Tampilkan Ringkasan AI */}
+                  <h4 className="font-bold text-xs text-gray-900 dark:text-white line-clamp-3">{impactData.desc}</h4>
                </Card>
             </div>
 

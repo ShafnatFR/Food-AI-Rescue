@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, Search, SlidersHorizontal, MapPin, Clock, ArrowRight, User as UserIcon, Settings, ChevronRight, ChevronLeft, ChevronDown, ChevronUp, Edit2, Info, Calendar, Percent, Truck, Shield, HelpCircle, LogOut, Store, Leaf, TrendingUp, MessageCircle, Heart, Bookmark, CheckCircle, Lock, Camera, Mail, Phone, MoreVertical, Archive, Trash2, CheckSquare, Square, Eye, Grid, History, Plus, X, Home, Building2, Briefcase, Coffee, Utensils, Star, Moon, Sun, AlertCircle, UploadCloud } from 'lucide-react';
+import { Bell, Search, SlidersHorizontal, MapPin, Clock, ArrowRight, User as UserIcon, Settings, ChevronRight, ChevronLeft, ChevronDown, ChevronUp, Edit2, Info, Calendar, Percent, Truck, Shield, HelpCircle, LogOut, Store, Leaf, TrendingUp, MessageCircle, Heart, Bookmark, CheckCircle, Lock, Camera, Mail, Phone, MoreVertical, Archive, Trash2, CheckSquare, Square, Eye, Grid, History, Plus, X, Home, Building2, Briefcase, Coffee, Utensils, Star, Moon, Sun, AlertCircle, UploadCloud, Sparkles } from 'lucide-react';
 import { ScreenName, User } from '../types';
 import { Button, Input, Header, ScreenLayout, ScrollableContent, ListItem, Card, Section, Badge } from './ui';
 
@@ -14,6 +14,32 @@ interface AppScreenProps {
   isDarkMode?: boolean;
   toggleTheme?: () => void;
 }
+
+// Algoritma Sederhana "AI Matching" sesuai Proposal
+const calculateMatchScore = (item: any) => {
+  let score = 0;
+
+  // 1. Prioritas Jarak (Semakin dekat, skor makin tinggi)
+  // Asumsi format distance: "0.5 km"
+  const distance = parseFloat(item.distance.split(' ')[0]);
+  if (distance < 1.0) score += 50;       // Sangat dekat (< 1km)
+  else if (distance < 3.0) score += 30;  // Dekat (< 3km)
+  else score += 10;
+
+  // 2. Prioritas Urgensi Waktu (Mencegah Basi)
+  // Asumsi format timeLeft: "Hari ini, s/d 21:00"
+  if (item.timeLeft.includes("s/d 12:00") || item.timeLeft.includes("Segera")) {
+     score += 40; // Kritis
+  } else if (item.timeLeft.includes("Hari ini")) {
+     score += 20; // Sedang
+  }
+
+  // 3. Prioritas Stok (Habiskan stok sedikit dulu)
+  const qty = parseInt(item.quantity.split(' ')[0]);
+  if (qty < 3) score += 15;
+
+  return score;
+};
 
 export const HomeScreen: React.FC<AppScreenProps> = ({ navigate, setGlobalState, globalState }) => {
   const [activeCategory, setActiveCategory] = useState('Semua');
@@ -107,11 +133,19 @@ export const HomeScreen: React.FC<AppScreenProps> = ({ navigate, setGlobalState,
     }
   ];
 
-  const filteredFeed = activeCategory === 'Semua' 
-    ? allFoodFeed 
+  // 1. Filter dasar (Kategori)
+  let processedFeed = activeCategory === 'Semua'
+    ? allFoodFeed
     : activeCategory === 'Tersimpan'
       ? allFoodFeed.filter(item => savedItems.includes(item.id))
       : allFoodFeed.filter(item => item.category === activeCategory);
+
+  // 2. AI MATCHING: Sortir berdasarkan Skor Kecocokan
+  // Ini memenuhi janji "Optimasi Logistik" di proposal
+  processedFeed = processedFeed.map(item => ({
+    ...item,
+    matchScore: calculateMatchScore(item) // Hitung skor
+  })).sort((a, b) => b.matchScore - a.matchScore); // Urutkan dari skor tertinggi
 
   const handleSearchSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -318,13 +352,20 @@ export const HomeScreen: React.FC<AppScreenProps> = ({ navigate, setGlobalState,
           </div>
           
           <div className="space-y-5">
-             {filteredFeed.length > 0 ? (
-               filteredFeed.map((item) => (
+             {processedFeed.length > 0 ? (
+               processedFeed.map((item) => (
                  <div 
                     key={item.id} 
                     className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md hover:scale-[1.02] transition-all duration-300 cursor-pointer group relative"
                     onClick={() => handleReservation(item)}
                  >
+                   {/* TAMBAHAN: Badge Rekomendasi AI jika skor tinggi */}
+                   {(item as any).matchScore > 20 && (
+                      <div className="absolute top-0 left-0 bg-gradient-to-r from-primary to-orange-600 text-white text-[10px] font-bold px-3 py-1 rounded-br-xl z-20 shadow-sm flex items-center gap-1">
+                         <Sparkles size={10} /> Paling Cocok Untukmu
+                      </div>
+                   )}
+
                    {/* Header Kartu */}
                    <div className="p-3 flex items-center gap-3 border-b border-gray-50 dark:border-gray-700">
                       <img src={item.avatar} className="w-8 h-8 rounded-full object-cover border border-gray-100 dark:border-gray-600" />
@@ -1039,7 +1080,6 @@ export const HelpScreen: React.FC<AppScreenProps> = ({ navigate, goBack }) => {
 
 // Helper component for Swipe Logic
 const SwipeableNotificationItem: React.FC<{ data: any, onArchive: () => void, onDelete: () => void }> = ({ data, onArchive, onDelete }) => {
-// ... rest of the file remains unchanged
    const [startX, setStartX] = useState(0);
    const [offsetX, setOffsetX] = useState(0);
    const [isDragging, setIsDragging] = useState(false);

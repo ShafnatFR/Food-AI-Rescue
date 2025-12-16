@@ -108,6 +108,8 @@ const App: React.FC = () => {
              setHistory([]);
              if (role === 'ADMIN') {
                setCurrentScreen('ADMIN_DASHBOARD');
+             } else if (role === 'PARTNER') {
+               setCurrentScreen('PARTNER_DASHBOARD');
              } else {
                setCurrentScreen('HOME');
              }

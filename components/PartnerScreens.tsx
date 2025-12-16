@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Bell, User, UploadCloud, X, ChevronRight, AlertTriangle, Package, TrendingUp, CheckCircle, ChevronLeft, Search, Plus } from 'lucide-react';
+import { Bell, User, UploadCloud, X, ChevronRight, AlertTriangle, Package, TrendingUp, CheckCircle, ChevronLeft, Search, Plus, Loader2 } from 'lucide-react';
 import { ScreenName } from '../types';
 import { Button } from './ui';
+import { extractFoodMetadata } from '../services/geminiService';
 
 interface PartnerProps {
   navigate: (screen: ScreenName) => void;
@@ -335,12 +336,43 @@ export const PartnerTransactions: React.FC<PartnerProps> = ({ navigate }) => {
 export const UploadProduct: React.FC<PartnerProps> = ({ navigate }) => {
   const [step, setStep] = useState(1);
   const [image, setImage] = useState<string | null>(null);
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  
+  // State baru untuk Form & AI
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [ingredients, setIngredients] = useState("");
+  const [category, setCategory] = useState("Pilih Kategori...");
+  
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
      if (e.target.files?.[0]) {
+       const file = e.target.files[0];
        const reader = new FileReader();
-       reader.onload = () => setImage(reader.result as string);
-       reader.readAsDataURL(e.target.files[0]);
+       
+       reader.onload = async () => {
+         const base64 = reader.result as string;
+         setImage(base64);
+         
+         // --- PANGGIL AI UNTUK AUTO-FILL ---
+         setIsAnalyzing(true);
+         try {
+            // Kita minta AI menebak metadata dari gambar
+            const metadata = await extractFoodMetadata("Identifikasi makanan ini", base64);
+            
+            // Auto-fill form berdasarkan tebakan AI
+            if (metadata) {
+                setCategory(metadata.category || "Makanan Berat");
+                // Mengisi bahan/tag otomatis jika ada
+                if (metadata.tags && metadata.tags.length > 0) {
+                    setIngredients(metadata.tags.join(", "));
+                }
+            }
+         } catch (error) {
+            console.error("Gagal identifikasi otomatis", error);
+         } finally {
+            setIsAnalyzing(false);
+         }
+         // ----------------------------------
+       };
+       reader.readAsDataURL(file);
      }
   };
 
@@ -350,7 +382,7 @@ export const UploadProduct: React.FC<PartnerProps> = ({ navigate }) => {
          <button onClick={() => navigate('PARTNER_INVENTORY')} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600">
             <ChevronLeft size={24} />
          </button>
-         <h1 className="font-bold text-lg text-gray-900">Upload Produk</h1>
+         <h1 className="font-bold text-lg text-gray-900">Upload Produk (AI Powered)</h1>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar pb-8">
@@ -375,29 +407,50 @@ export const UploadProduct: React.FC<PartnerProps> = ({ navigate }) => {
             </div>
          </div>
 
+         {/* AI Loading Indicator */}
+         {isAnalyzing && (
+            <div className="flex items-center gap-2 text-primary text-sm font-bold mb-4 animate-pulse bg-orange-50 p-3 rounded-xl">
+                <Loader2 className="animate-spin" size={16} />
+                AI sedang mengidentifikasi makanan & mengisi formulir...
+            </div>
+         )}
+
          {/* Ingredients */}
          <div>
-           <label className="block font-bold text-gray-900 mb-3">Input Bahan-bahan</label>
-           <textarea className="w-full p-4 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary resize-none h-24 mb-3" placeholder="Masukkan bahan-bahan, pisahkan dengan koma atau enter..." />
-           <Button variant="outline-primary" className="py-2.5 text-sm mb-4">Tambahkan Bahan</Button>
-           <div className="flex flex-wrap gap-2">
-              {['Kelapa', 'Santan', 'Cabai', 'Bawang'].map(tag => (
-                <span key={tag} className="px-3 py-1 border border-gray-300 rounded-full text-xs text-gray-600 flex items-center gap-1">
-                  {tag} <X size={12} className="cursor-pointer" />
-                </span>
-              ))}
-           </div>
+           <label className="block font-bold text-gray-900 mb-3">Input Bahan-bahan (Auto-fill)</label>
+           <textarea 
+             value={ingredients}
+             onChange={(e) => setIngredients(e.target.value)}
+             className="w-full p-4 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary resize-none h-24 mb-3" 
+             placeholder="Masukkan bahan-bahan, pisahkan dengan koma atau enter..." 
+           />
+           <Button variant="outline-primary" className="py-2.5 text-sm mb-4">Tambahkan Manual</Button>
+           {ingredients && (
+             <div className="flex flex-wrap gap-2">
+                {ingredients.split(',').map((tag, i) => tag.trim() && (
+                  <span key={i} className="px-3 py-1 border border-gray-300 rounded-full text-xs text-gray-600 flex items-center gap-1 bg-gray-50">
+                    {tag.trim()} <X size={12} className="cursor-pointer" />
+                  </span>
+                ))}
+             </div>
+           )}
          </div>
          
          {/* Category */}
          <div>
-           <label className="block font-bold text-gray-900 mb-3">Pilih Kategori Produk</label>
+           <label className="block font-bold text-gray-900 mb-3">Pilih Kategori Produk (Auto-select)</label>
            <div className="relative">
-             <select className="w-full p-4 bg-white border border-gray-200 rounded-xl text-sm text-gray-500 focus:outline-none appearance-none">
+             <select 
+               value={category}
+               onChange={(e) => setCategory(e.target.value)}
+               className="w-full p-4 bg-white border border-gray-200 rounded-xl text-sm text-gray-500 focus:outline-none appearance-none"
+             >
                <option>Pilih Kategori...</option>
                <option>Makanan Berat</option>
                <option>Minuman</option>
-               <option>Kue & Roti</option>
+               <option>Roti & Kue</option>
+               <option>Buah & Sayur</option>
+               <option>Cemilan</option>
              </select>
              <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-gray-400" size={16} />
            </div>
@@ -405,31 +458,23 @@ export const UploadProduct: React.FC<PartnerProps> = ({ navigate }) => {
 
          {/* AI Questions */}
          <div>
-            <h3 className="font-bold text-gray-900 mb-2">Pertanyaan AI tentang Bahan Berisiko</h3>
-            <p className="text-xs text-gray-500 mb-4">AI telah mengidentifikasi beberapa bahan yang mungkin berisiko. Harap jawab pertanyaan berikut:</p>
+            <h3 className="font-bold text-gray-900 mb-2">Verifikasi Keamanan Pangan</h3>
+            <p className="text-xs text-gray-500 mb-4">Pastikan makanan ini aman untuk dibagikan:</p>
             
             <div className="space-y-4">
               <div className="p-3 border border-gray-200 rounded-xl flex items-start gap-3 bg-gray-50">
                  <div className="w-5 h-5 rounded-full border border-gray-300 mt-0.5 shrink-0 bg-white"></div>
-                 <p className="text-sm text-gray-700">Apakah produk ini menggunakan santan asli?</p>
+                 <p className="text-sm text-gray-700">Makanan dikemas dengan higienis?</p>
               </div>
               <div className="p-3 border border-gray-200 rounded-xl flex items-start gap-3 bg-gray-50">
                  <div className="w-5 h-5 rounded-full border border-gray-300 mt-0.5 shrink-0 bg-white"></div>
-                 <p className="text-sm text-gray-700">Apakah santan diganti dengan alternatif lain?</p>
-              </div>
-              <div className="p-3 border border-gray-200 rounded-xl flex items-start gap-3 bg-gray-50">
-                 <div className="w-5 h-5 rounded-full border border-gray-300 mt-0.5 shrink-0 bg-white"></div>
-                 <p className="text-sm text-gray-700">Santan tidak digunakan dalam produk ini.</p>
+                 <p className="text-sm text-gray-700">Tidak ada bahan basi atau kedaluwarsa?</p>
               </div>
             </div>
             
-            {/* Pagination Dots */}
             <div className="flex justify-between items-center mt-6">
-               <Button variant="outline" className="w-auto px-6 py-2 h-auto text-xs">Back</Button>
-               <div className="flex gap-2">
-                 {[1,2,3,4,5].map(d => <div key={d} className={`w-1.5 h-1.5 rounded-full ${d === 5 ? 'bg-orange-400' : 'bg-gray-300'}`}></div>)}
-               </div>
-               <Button className="w-auto px-6 py-2 h-auto text-xs" onClick={() => navigate('SUCCESS')}>Next</Button>
+               <Button variant="outline" className="w-auto px-6 py-2 h-auto text-xs">Batal</Button>
+               <Button className="w-auto px-6 py-2 h-auto text-xs" onClick={() => navigate('SUCCESS')}>Upload Sekarang</Button>
             </div>
          </div>
          
