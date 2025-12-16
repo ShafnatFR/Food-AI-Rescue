@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Search, Star, Clock, ShoppingBag, Leaf, DollarSign, Award, Share2, Heart, Filter, CheckCircle, User as UserIcon, Phone, FileText, Send, X, Home, Info, ChevronRight, Store, Wallet, CreditCard, Banknote, ChevronDown, ChevronLeft, Building2, MessageCircle, Calendar } from 'lucide-react';
 import { ScreenName } from '../types';
 import { Button, Input, ScreenLayout, Header, ScrollableContent, Section, Card, Badge, ListItem } from './ui';
@@ -251,42 +251,103 @@ export const CreateRequestScreen: React.FC<FeatureProps> = ({ navigate, goBack, 
 };
 
 export const MapViewScreen: React.FC<FeatureProps> = ({ navigate, goBack }) => {
+  const mapRef = useRef<HTMLDivElement>(null);
   const [selectedPin, setSelectedPin] = useState<number | null>(null);
-  const pins = [{ id: 1, lat: 30, lng: 40 }, { id: 2, lat: 50, lng: 60 }, { id: 3, lat: 45, lng: 30 }];
+  
+  // Koordinat Demo (Pusat Bandung / Bojongsoang sesuai proposal)
+  const centerPos = [-6.9175, 107.6191];
+
+  const pins = [
+    { id: 1, lat: -6.9147, lng: 107.6098, name: "Bakery Pagi Sore", type: "Roti", stock: "5 Paket" },
+    { id: 2, lat: -6.9210, lng: 107.6250, name: "Restoran Padang", type: "Berat", stock: "2 Porsi" },
+    { id: 3, lat: -6.9190, lng: 107.6150, name: "Kopi Senja", type: "Minuman", stock: "4 Cup" }
+  ];
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+    
+    // Check if Leaflet global object exists (loaded via script tag in index.html)
+    const L = (window as any).L;
+    if (!L) return;
+
+    // Initialize Map
+    const map = L.map(mapRef.current, { zoomControl: false }).setView(centerPos, 14);
+
+    // Add Tile Layer (OSM)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Custom Icon
+    const customIcon = L.icon({
+        iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+        iconSize: [35, 35],
+        iconAnchor: [17, 35],
+        popupAnchor: [0, -30]
+    });
+
+    // Add Pins
+    pins.forEach((pin: any) => {
+        const marker = L.marker([pin.lat, pin.lng], { icon: customIcon }).addTo(map);
+        marker.on('click', () => {
+            setSelectedPin(pin.id);
+            map.setView([pin.lat, pin.lng], 15);
+        });
+    });
+
+    return () => {
+      map.remove();
+    };
+  }, []);
 
   return (
     <div className="flex flex-col h-full bg-gray-100 relative overflow-hidden">
-      <div className="absolute top-6 left-4 right-4 z-20 flex gap-3">
-        <button onClick={goBack} className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-md text-gray-700"><ChevronRight size={24} className="rotate-180" /></button>
-        <div className="flex-1 bg-white rounded-full shadow-md flex items-center px-4 h-10"><Search size={18} className="text-gray-400 mr-2" /><span className="text-sm text-gray-400">Cari lokasi...</span></div>
-        <button className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center shadow-md"><Filter size={18} /></button>
+      {/* Header Floating */}
+      <div className="absolute top-6 left-4 right-4 z-[400] flex gap-3 pointer-events-none">
+        <button onClick={goBack} className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-md text-gray-700 pointer-events-auto hover:bg-gray-50 transition-colors">
+            <ChevronRight size={24} className="rotate-180" />
+        </button>
+        <div className="flex-1 bg-white rounded-full shadow-md flex items-center px-4 h-10 pointer-events-auto">
+            <Search size={18} className="text-gray-400 mr-2" />
+            <span className="text-sm text-gray-400">Cari di sekitar Bandung...</span>
+        </div>
+        <button className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center shadow-md pointer-events-auto hover:bg-orange-600 transition-colors"><Filter size={18} /></button>
       </div>
 
-      <div className="w-full h-full bg-blue-50 relative" onClick={() => setSelectedPin(null)}>
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'linear-gradient(#94a3b8 1px, transparent 1px), linear-gradient(90deg, #94a3b8 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
-        {pins.map((pin) => (
-           <button key={pin.id} onClick={(e) => { e.stopPropagation(); setSelectedPin(pin.id); }} className={`absolute transform -translate-x-1/2 -translate-y-full transition-all duration-300 ${selectedPin === pin.id ? 'scale-125 z-10' : 'scale-100'}`} style={{ top: `${pin.lat}%`, left: `${pin.lng}%` }}>
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg border-2 border-white ${selectedPin === pin.id ? 'bg-primary text-white' : 'bg-white text-primary'}`}><MapPin size={20} fill="currentColor" /></div>
-              <div className="w-2 h-1 bg-black/20 rounded-full mx-auto mt-1 blur-[1px]"></div>
-           </button>
-        ))}
-      </div>
+      {/* INTERACTIVE LEAFLET MAP CONTAINER */}
+      <div ref={mapRef} className="w-full h-full z-0 bg-blue-50" />
 
-      {selectedPin && (
-         <div className="absolute bottom-6 left-4 right-4 animate-in slide-in-from-bottom-10 z-20">
+      {/* Bottom Info Card / Selected Pin Details */}
+      {selectedPin ? (
+         <div className="absolute bottom-6 left-4 right-4 z-[400] animate-in slide-in-from-bottom-10">
             <Card className="flex gap-4">
-               <div className="w-20 h-20 bg-gray-200 rounded-xl overflow-hidden shrink-0"><img src={`https://picsum.photos/200/200?random=${selectedPin}`} className="w-full h-full object-cover" /></div>
+               <div className="w-20 h-20 bg-gray-200 rounded-xl overflow-hidden shrink-0">
+                  <img src={`https://picsum.photos/200/200?random=${selectedPin}`} className="w-full h-full object-cover" />
+               </div>
                <div className="flex-1">
                   <div className="flex justify-between items-start">
                      <h3 className="font-bold text-gray-900">Restoran Mitra #{selectedPin}</h3>
                      <Badge color="green">Buka</Badge>
                   </div>
                   <p className="text-xs text-gray-500 mb-2">Padang • 0.8 km</p>
-                  <div className="flex items-center gap-1 text-xs font-semibold text-orange-500 mb-3"><Star size={12} fill="currentColor" /> 4.8 (200+)</div>
+                  <div className="flex items-center gap-1 text-xs font-semibold text-orange-500 mb-3">
+                     <Star size={12} fill="currentColor" /> 4.8 (200+)
+                  </div>
                   <Button size="sm" className="h-9 w-full" onClick={() => navigate('PARTNER_DETAIL')}>Lihat Makanan</Button>
                </div>
+               <button onClick={() => setSelectedPin(null)} className="absolute top-2 right-2 p-1 text-gray-400"><X size={16}/></button>
             </Card>
          </div>
+      ) : (
+        <div className="absolute bottom-6 left-4 right-4 z-[400]">
+            <div className="bg-white p-4 rounded-xl shadow-lg flex items-center gap-3">
+               <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Info size={20}/></div>
+               <div>
+                  <p className="text-xs text-gray-500">Info Logistik</p>
+                  <p className="text-sm font-bold">3 Mitra Food Rescue ditemukan di sekitar Anda.</p>
+               </div>
+            </div>
+        </div>
       )}
     </div>
   );
