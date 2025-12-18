@@ -11,6 +11,7 @@ export type ScreenName =
   | 'CHANGE_PASSWORD' 
   | 'NOTIFICATION_SETTINGS' 
   | 'CHECK_QUALITY' 
+  | 'QUALITY_HISTORY'
   | 'NOTIFICATIONS'
   | 'PARTNER_DASHBOARD'
   | 'PARTNER_INVENTORY'
@@ -32,12 +33,18 @@ export type ScreenName =
   | 'EXPLORE'          
   | 'LOCATION_SELECT'
   | 'CREATE_REQUEST'
-  | 'HELP_FAQ';
+  | 'HELP_FAQ'
+  | 'SAVED_ITEMS'
+  | 'FAVORITES';
 
 export interface User {
+  id?: string | number;
   name: string;
   email: string;
   avatar: string;
+  phone?: string;
+  bio?: string;
+  role?: 'USER' | 'PARTNER' | 'ADMIN';
 }
 
 export interface Partner {
