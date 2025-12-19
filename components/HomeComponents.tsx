@@ -12,7 +12,7 @@ export const HomeHeader: React.FC<any> = ({ user, locationName, onProfileClick, 
        <div onClick={onLocationClick} className="cursor-pointer">
          <p className="text-xs text-slate-500 dark:text-slate-400">Lokasi Anda,</p>
          <div className="flex items-center gap-1">
-           <h3 className="font-bold text-slate-900 dark:text-slate-50 text-sm">{locationName}</h3>
+           <h3 className="font-bold text-slate-900 dark:text-white text-sm">{locationName}</h3>
            <ChevronRight size={14} className="text-primary" />
          </div>
        </div>
@@ -28,7 +28,7 @@ export const HomeSearch: React.FC<any> = ({ onSearchClick, onFilterClick }) => (
   <div className="relative mb-4">
     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
     <input 
-      className="w-full pl-11 pr-12 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-sm focus:outline-none focus:border-primary text-slate-900 dark:text-slate-50 shadow-sm cursor-text" 
+      className="w-full pl-11 pr-12 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-sm focus:outline-none focus:border-primary text-slate-900 dark:text-white shadow-sm cursor-text" 
       placeholder="Cari makanan di sekitar..." 
       onClick={onSearchClick} 
       readOnly 
@@ -62,7 +62,7 @@ export const CategoryTabs: React.FC<any> = ({ activeCategory, onCategoryChange, 
 export const HomePromoBanner: React.FC<any> = ({ onMapClick, onRequestClick }) => (
   <div className="w-full bg-gradient-to-r from-primary to-orange-400 rounded-3xl p-5 text-white shadow-lg relative overflow-hidden">
      <div className="relative z-10">
-       <h2 className="text-lg font-bold mb-1 text-white text-slate-900">Forum Berbagi Makanan</h2>
+       <h2 className="text-lg font-bold mb-1 text-white">Forum Berbagi Makanan</h2>
        <p className="text-xs text-orange-50 mb-4 max-w-[70%]">Lihat surplus makanan yang dibagikan mitra hari ini.</p>
        <div className="flex gap-2">
           <button onClick={onMapClick} className="bg-white text-primary px-4 py-2 rounded-full text-xs font-bold hover:bg-slate-50 transition-colors">Peta Lokasi</button>
@@ -79,7 +79,7 @@ export const FoodFeedCard: React.FC<any> = ({ item, isSaved, onSaveToggle, onCli
     <div className="p-3 flex items-center gap-3 border-b border-slate-50 dark:border-slate-700">
        <img src={item.avatar} className="w-8 h-8 rounded-full object-cover" />
        <div className="flex-1">
-          <h4 className="font-bold text-slate-900 dark:text-slate-50 text-sm">{item.partner}</h4>
+          <h4 className="font-bold text-slate-900 dark:text-white text-sm">{item.partner}</h4>
           <div className="flex items-center gap-2 mt-0.5">
             <Badge color={item.status === 'Buka' ? 'green' : 'red'}>{item.status}</Badge>
             <span className="text-[10px] text-slate-500">• {item.distance}</span>
@@ -99,13 +99,13 @@ export const FoodFeedCard: React.FC<any> = ({ item, isSaved, onSaveToggle, onCli
       </div>
     </div>
     <div className="p-4">
-      <h3 className="font-bold text-slate-900 dark:text-slate-50 text-base mb-2">{item.foodName}</h3>
+      <h3 className="font-bold text-slate-900 dark:text-white text-base mb-2">{item.foodName}</h3>
       <div className="flex items-center gap-4 text-xs text-slate-500 mb-4 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg">
         <div className="flex items-center gap-1.5 text-orange-600 dark:text-orange-400 font-medium"><Clock size={14} /> {item.timeLeft}</div>
         <div className="w-px h-3 bg-slate-300 dark:bg-slate-700"></div>
         <div className="flex items-center gap-1.5 text-green-600 dark:text-green-400 font-medium"><Leaf size={14} /> Sisa {item.quantity}</div>
       </div>
-      <Button className="w-full py-2.5 text-sm rounded-xl h-10 text-slate-900" onClick={(e) => { e.stopPropagation(); onActionClick(); }}>Ambil Makanan</Button>
+      <Button className="w-full py-2.5 text-sm rounded-xl h-10" onClick={(e) => { e.stopPropagation(); onActionClick(); }}>Ambil Makanan</Button>
     </div>
   </div>
 );

@@ -25,9 +25,9 @@ export const ManualLocationForm: React.FC<any> = ({
   };
 
   return (
-    <Card className="p-5 animate-in slide-in-from-top-2 border-primary/20 bg-orange-50/10">
+    <Card className="p-5 animate-in slide-in-from-top-2 border-primary/20 bg-orange-50/10 dark:bg-gray-800/50">
       <div className="flex justify-between items-center mb-6">
-        <h4 className="font-bold text-slate-900 text-sm">Formulir Alamat Manual</h4>
+        <h4 className="font-bold text-slate-900 dark:text-white text-sm">Formulir Alamat Manual</h4>
         <button onClick={onCancel} className="text-slate-400"><X size={18}/></button>
       </div>
       
@@ -83,9 +83,9 @@ export const ManualLocationForm: React.FC<any> = ({
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-slate-900 block">Alamat Lengkap</label>
+          <label className="text-sm font-semibold text-slate-900 dark:text-slate-200 block">Alamat Lengkap</label>
           <textarea 
-            className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary h-20 resize-none" 
+            className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary h-20 resize-none" 
             placeholder="Jalan, Blok, No..." 
             value={formData.fullAddress} 
             onChange={e => setFormData({...formData, fullAddress: e.target.value})} 
@@ -100,9 +100,9 @@ export const ManualLocationForm: React.FC<any> = ({
         />
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-slate-900 block">Foto Lokasi (Opsional)</label>
+          <label className="text-sm font-semibold text-slate-900 dark:text-slate-200 block">Foto Lokasi (Opsional)</label>
           <div 
-            className="w-full h-32 border-2 border-dashed border-slate-300 rounded-xl flex items-center justify-center bg-white cursor-pointer overflow-hidden" 
+            className="w-full h-32 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl flex items-center justify-center bg-white dark:bg-slate-800 cursor-pointer overflow-hidden" 
             onClick={() => fileInputRef.current?.click()}
           >
             {formData.locationPhoto ? (
@@ -117,7 +117,7 @@ export const ManualLocationForm: React.FC<any> = ({
           </div>
         </div>
 
-        <Button className="w-full text-slate-900" onClick={onSave}>Simpan & Gunakan</Button>
+        <Button className="w-full" onClick={onSave}>Simpan & Gunakan</Button>
       </div>
     </Card>
   );
