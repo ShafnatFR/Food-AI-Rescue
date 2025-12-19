@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Settings, LogOut, Heart, Bookmark, History as HistoryIcon, Edit2, Lock, MapPin, Sun, Moon, HelpCircle, Bell } from 'lucide-react';
+import { Settings, LogOut, Heart, Bookmark, History as HistoryIcon, Edit2, Lock, MapPin, Sun, Moon, HelpCircle, Bell, ChevronRight } from 'lucide-react';
 import { ScreenName } from '../types';
 import { Header, ScreenLayout, ScrollableContent, ListItem, Card, Section, Badge, Button, Input } from './ui';
 import { HomeHeader, HomeSearch, CategoryTabs, HomePromoBanner, FoodFeedCard } from './HomeComponents';
@@ -16,6 +17,63 @@ const calculateMatchScore = (item: any) => {
   if (qty < 3) score += 15;
   return score;
 };
+
+// --- SUB-COMPONENTS (WIDGETS) ---
+
+const ProfileHeader: React.FC<{ user: any; mode: string }> = ({ user, mode }) => (
+  <div className="p-6 pb-2">
+    <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50 mb-6">Profil Saya</h1>
+    <div className="flex items-center gap-4 mb-6">
+      <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden border-2 border-white dark:border-slate-800 shadow-sm shrink-0">
+        <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <h3 className="font-bold text-lg text-slate-900 dark:text-slate-50 truncate">{user.name}</h3>
+        <p className="text-sm text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
+        <Badge color="blue" className="mt-1">{mode === 'USER' ? 'Penerima' : 'Mitra'}</Badge>
+      </div>
+    </div>
+  </div>
+);
+
+const ProfileActionsSection: React.FC<{ navigate: (s: ScreenName) => void }> = ({ navigate }) => (
+  <Section title="Aktivitas" className="px-4">
+    <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden divide-y divide-slate-50 dark:divide-slate-800/50">
+      <ListItem icon={<Heart size={20} className="text-red-500" />} title="Favorit Saya" onClick={() => navigate('FAVORITES')} />
+      <ListItem icon={<Bookmark size={20} className="text-blue-500" />} title="Tersimpan" onClick={() => navigate('SAVED_ITEMS')} />
+      <ListItem icon={<HistoryIcon size={20} className="text-orange-500" />} title="Riwayat Pesanan" onClick={() => navigate('HISTORY')} />
+    </div>
+  </Section>
+);
+
+const ProfileSettingsSection: React.FC<{ navigate: (s: ScreenName) => void }> = ({ navigate }) => (
+  <Section title="Akun" className="px-4">
+    <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden divide-y divide-slate-50 dark:divide-slate-800/50">
+      <ListItem icon={<Edit2 size={20} />} title="Edit Profil" onClick={() => navigate('EDIT_PROFILE')} />
+      <ListItem icon={<Lock size={20} />} title="Ganti Kata Sandi" onClick={() => navigate('CHANGE_PASSWORD')} />
+      <ListItem icon={<MapPin size={20} />} title="Daftar Alamat" onClick={() => navigate('LOCATION_SELECT')} />
+    </div>
+  </Section>
+);
+
+const ProfilePreferencesSection: React.FC<{ isDarkMode: boolean; toggleTheme: () => void; navigate: (s: ScreenName) => void }> = ({ isDarkMode, toggleTheme, navigate }) => (
+  <Section title="Preferensi" className="px-4">
+    <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden divide-y divide-slate-50 dark:divide-slate-800/50">
+        <div className="flex items-center justify-between py-3.5 px-4">
+           <div className="flex items-center gap-4">
+              <div className="w-10 h-10 flex items-center justify-center text-slate-400 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                {isDarkMode ? <Moon size={20} /> : <Sun size={20} />}
+              </div>
+              <p className="font-bold text-sm text-slate-900 dark:text-slate-50">Mode Gelap</p>
+           </div>
+           <button onClick={toggleTheme} className={`w-11 h-6 rounded-full transition-colors relative ${isDarkMode ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-700'}`}><div className={`w-5 h-5 bg-white rounded-full shadow-sm absolute top-0.5 transition-transform ${isDarkMode ? 'left-[22px]' : 'left-0.5'}`}></div></button>
+        </div>
+       <ListItem icon={<HelpCircle size={20} />} title="Bantuan & FAQ" onClick={() => navigate('HELP_FAQ')} />
+    </div>
+  </Section>
+);
+
+// --- MAIN SCREENS ---
 
 export const HomeScreen: React.FC<any> = ({ navigate, setGlobalState, globalState }) => {
   const [activeCategory, setActiveCategory] = useState('Semua');
@@ -81,48 +139,11 @@ export const ProfileScreen: React.FC<any> = ({ navigate, userMode, toggleTheme, 
   
   return (
     <ScreenLayout>
-      <div className="p-6 pb-2">
-         <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50 mb-6">Profil Saya</h1>
-         <div className="flex items-center gap-4 mb-6">
-            <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden border-2 border-white dark:border-slate-800 shadow-sm shrink-0">
-               <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
-            </div>
-            <div className="flex-1 min-w-0">
-               <h3 className="font-bold text-lg text-slate-900 dark:text-slate-50 truncate">{user.name}</h3>
-               <p className="text-sm text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
-               <Badge color="blue" className="mt-1">{userMode === 'USER' ? 'Penerima' : 'Mitra'}</Badge>
-            </div>
-         </div>
-      </div>
+      <ProfileHeader user={user} mode={userMode} />
       <ScrollableContent className="p-0 px-2 pt-0 pb-28">
-         <Section title="Aktivitas" className="px-4">
-            <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden divide-y divide-slate-50 dark:divide-slate-800/50">
-               <ListItem icon={<Heart size={20} className="text-red-500" />} title="Favorit Saya" onClick={() => navigate('FAVORITES')} />
-               <ListItem icon={<Bookmark size={20} className="text-blue-500" />} title="Tersimpan" onClick={() => navigate('SAVED_ITEMS')} />
-               <ListItem icon={<HistoryIcon size={20} className="text-orange-500" />} title="Riwayat Pesanan" onClick={() => navigate('HISTORY')} />
-            </div>
-         </Section>
-         <Section title="Akun" className="px-4">
-            <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden divide-y divide-slate-50 dark:divide-slate-800/50">
-               <ListItem icon={<Edit2 size={20} />} title="Edit Profil" onClick={() => navigate('EDIT_PROFILE')} />
-               <ListItem icon={<Lock size={20} />} title="Ganti Kata Sandi" onClick={() => navigate('CHANGE_PASSWORD')} />
-               <ListItem icon={<MapPin size={20} />} title="Daftar Alamat" onClick={() => navigate('LOCATION_SELECT')} />
-            </div>
-         </Section>
-         <Section title="Preferensi" className="px-4">
-            <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden divide-y divide-slate-50 dark:divide-slate-800/50">
-                <div className="flex items-center justify-between py-3.5 px-4">
-                   <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 flex items-center justify-center text-slate-400 bg-slate-50 dark:bg-slate-900 rounded-xl">
-                        {isDarkMode ? <Moon size={20} /> : <Sun size={20} />}
-                      </div>
-                      <p className="font-bold text-sm text-slate-900 dark:text-slate-50">Mode Gelap</p>
-                   </div>
-                   <button onClick={toggleTheme} className={`w-11 h-6 rounded-full transition-colors relative ${isDarkMode ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-700'}`}><div className={`w-5 h-5 bg-white rounded-full shadow-sm absolute top-0.5 transition-transform ${isDarkMode ? 'left-[22px]' : 'left-0.5'}`}></div></button>
-                </div>
-               <ListItem icon={<HelpCircle size={20} />} title="Bantuan & FAQ" onClick={() => navigate('HELP_FAQ')} />
-            </div>
-         </Section>
+         <ProfileActionsSection navigate={navigate} />
+         <ProfileSettingsSection navigate={navigate} />
+         <ProfilePreferencesSection isDarkMode={isDarkMode} toggleTheme={toggleTheme} navigate={navigate} />
          <div className="px-4 pt-4">
             <button onClick={() => navigate('LOGIN')} className="w-full flex items-center justify-center gap-2 p-4 text-red-500 font-bold text-sm hover:bg-red-50 dark:hover:bg-red-900/20 rounded-2xl transition-colors"><LogOut size={20} /> Keluar</button>
          </div>
@@ -161,12 +182,7 @@ export const EditProfileScreen: React.FC<any> = ({ goBack, globalState, setGloba
   );
 };
 
-// --- FIX: Added missing screen components to satisfy imports in App.tsx ---
-
-/**
- * Notification Screen
- */
-export const NotificationScreenExtended: React.FC<any> = ({ goBack }) => (
+export const NotificationScreen: React.FC<any> = ({ goBack }) => (
   <ScreenLayout>
     <Header title="Notifikasi" onBack={goBack} />
     <ScrollableContent>
@@ -179,9 +195,6 @@ export const NotificationScreenExtended: React.FC<any> = ({ goBack }) => (
   </ScreenLayout>
 );
 
-/**
- * Change Password Screen
- */
 export const ChangePasswordScreen: React.FC<any> = ({ goBack }) => (
   <ScreenLayout>
     <Header title="Ganti Kata Sandi" onBack={goBack} />
@@ -196,10 +209,7 @@ export const ChangePasswordScreen: React.FC<any> = ({ goBack }) => (
   </ScreenLayout>
 );
 
-/**
- * Notification Settings Screen
- */
-export const NotificationSettingsScreenExtended: React.FC<any> = ({ goBack }) => (
+export const NotificationSettingsScreen: React.FC<any> = ({ goBack }) => (
   <ScreenLayout>
     <Header title="Pengaturan Notifikasi" onBack={goBack} />
     <ScrollableContent>
@@ -226,10 +236,7 @@ export const NotificationSettingsScreenExtended: React.FC<any> = ({ goBack }) =>
   </ScreenLayout>
 );
 
-/**
- * Add Address Screen
- */
-export const AddAddressScreenExtended: React.FC<any> = ({ goBack }) => (
+export const AddAddressScreen: React.FC<any> = ({ goBack }) => (
   <ScreenLayout>
     <Header title="Tambah Alamat" onBack={goBack} />
     <ScrollableContent>
@@ -243,9 +250,6 @@ export const AddAddressScreenExtended: React.FC<any> = ({ goBack }) => (
   </ScreenLayout>
 );
 
-/**
- * Help & FAQ Screen
- */
 export const HelpScreen: React.FC<any> = ({ goBack }) => (
   <ScreenLayout>
     <Header title="Bantuan & FAQ" onBack={goBack} />
@@ -265,8 +269,3 @@ export const HelpScreen: React.FC<any> = ({ goBack }) => (
     </ScrollableContent>
   </ScreenLayout>
 );
-
-// Compatibility aliases for different import names used in App.tsx versions
-export { NotificationScreenExtended as NotificationScreen };
-export { NotificationSettingsScreenExtended as NotificationSettingsScreen };
-export { AddAddressScreenExtended as AddAddressScreen };

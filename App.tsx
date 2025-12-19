@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Home, CheckCircle, User as UserIcon, Store, FileText, BarChart3, Users, ShieldCheck } from 'lucide-react';
 import { ScreenName } from './types';
 import { LoginScreen, SignupScreen, ForgotPasswordScreen, VerificationScreen, NewPasswordScreen } from './components/AuthScreens';
-import { HomeScreen, ProfileScreen, NotificationScreenExtended, EditProfileScreen, ChangePasswordScreen, NotificationSettingsScreenExtended, AddAddressScreenExtended, HelpScreen } from './components/AppScreens';
+// Corrected imports to match available exports in components/AppScreens.tsx
+import { HomeScreen, ProfileScreen, NotificationScreen, EditProfileScreen, ChangePasswordScreen, NotificationSettingsScreen, AddAddressScreen, HelpScreen } from './components/AppScreens';
 import { QualityCheckScreen } from './components/QualityCheck';
 import { PartnerDashboard, PartnerTransactions, UploadProduct, SuccessScreen, PartnerInventory } from './components/PartnerScreens';
 import { AdminDashboard, AdminUsers, AdminProducts, AdminReports, AdminSettings, AdminSidebar } from './components/AdminScreens';
@@ -73,7 +74,7 @@ const App: React.FC = () => {
       case 'PARTNER_DETAIL': return <PartnerDetailScreen {...props} />;
       case 'RESERVATION_FORM': return <ReservationFormScreen {...props} />;
       case 'RESERVATION_SUCCESS': return <ReservationSuccessScreenExtended {...props} />;
-      case 'ADD_ADDRESS': return <AddAddressScreenExtended {...props} />;
+      case 'ADD_ADDRESS': return <AddAddressScreen {...props} />;
       case 'LOCATION_SELECT': return <LocationSelectScreen {...props} />;
       case 'FAVORITES': return <FavoriteItemsScreen {...props} />;
       case 'EDIT_PROFILE': return <EditProfileScreen {...props} />;
@@ -85,8 +86,8 @@ const App: React.FC = () => {
       case 'VERIFICATION': return <VerificationScreen navigate={navigate} />;
       case 'NEW_PASSWORD': return <NewPasswordScreen navigate={navigate} />;
       case 'CHANGE_PASSWORD': return <ChangePasswordScreen {...props} />;
-      case 'NOTIFICATION_SETTINGS': return <NotificationSettingsScreenExtended {...props} />;
-      case 'NOTIFICATIONS': return <NotificationScreenExtended {...props} />;
+      case 'NOTIFICATION_SETTINGS': return <NotificationSettingsScreen {...props} />;
+      case 'NOTIFICATIONS': return <NotificationScreen {...props} />;
       case 'HELP_FAQ': return <HelpScreen {...props} />;
       case 'PARTNER_DASHBOARD': return <PartnerDashboard navigate={navigate} />;
       case 'PARTNER_INVENTORY': return <PartnerInventory navigate={navigate} />;

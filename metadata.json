@@ -3,6 +3,7 @@
   "description": "A food rescue application connecting partners with recipients, featuring AI-powered food quality checks.",
   "requestFramePermissions": [
     "camera",
-    "microphone"
+    "microphone",
+    "geolocation"
   ]
 }

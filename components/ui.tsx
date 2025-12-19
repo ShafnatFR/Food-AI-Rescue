@@ -169,7 +169,8 @@ export const ListItem: React.FC<ListItemProps> = ({ icon, title, subtitle, right
   >
     {icon && (
       <div className="w-10 h-10 flex items-center justify-center text-slate-400 bg-slate-50 dark:bg-slate-900 rounded-xl group-hover:text-primary transition-colors shrink-0">
-        {React.cloneElement(icon as React.ReactElement, { size: 20 })}
+        {/* Fix: Casting icon to ReactElement<any> to allow injecting 'size' prop via cloneElement */}
+        {React.cloneElement(icon as React.ReactElement<any>, { size: 20 })}
       </div>
     )}
     <div className="flex-1 min-w-0">
